@@ -1,0 +1,98 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "glue"
+version = "0.1.0"
+description = "Advanced development infrastructure orchestration tool"
+authors = [
+    { name = "Matthew Messinger", email = "mattmess1221@gmail.com" },
+]
+dependencies = [
+    "starlette>=0.38.2",
+    "httpx>=0.27.2",
+    "uvicorn[standard]>=0.30.6",
+    "typer>=0.12.5",
+    "python-dotenv>=1.0.1",
+    "tomli; python_version < \"3.11\"",
+]
+requires-python = ">=3.9"
+readme = "README.md"
+
+[project.scripts]
+glue = "glue.main:app"
+
+[tool.uv]
+dev-dependencies = [
+    "ruff>=0.6.3",
+    "mypy>=1.11.2",
+    "fastapi>=0.112.2",
+]
+
+[tool.ruff]
+target-version = "py39"
+
+[tool.ruff.lint]
+# For rules, see https://docs.astral.sh/ruff/rules/
+select = [
+    "F",     # pyflakes
+    "E",     # pycodestyle error
+    "W",     # pycodestyle warning
+    "C90",   # mccabe
+    "I",     # isort
+    "N",     # pep8-naming
+    "D",     # pydocstyle
+    "UP",    # pyupgrade
+    "YTT",   # flake8-2020
+    "ANN",   # flake8-annotations
+    "ASYNC", # flake8-async
+    "S",     # flake8-bandit
+    "BLE",   # flake8-blind-except
+    "FBT",   # flake8-boolean-trap
+    "B",     # flake8-bugbear
+    "A",     # flake8-builtins
+    "DTZ",   # flake8-datetimez
+    "T20",   # flake8-print
+    "C4",    # flake8-comprehensions
+    "FA",    # flake8-future-annotations
+    "ISC",   # flake8-implicit-str-concat
+    "PIE",   # flake8-pie
+    "PT",    # flake8-pytest-style
+    "Q",     # flake8-quotes
+    "RSE",   # flake8-raise
+    "RET",   # flake8-return
+    "SLF",   # flake8-self
+    "SIM",   # flake8-simplify
+    "TID",   # flake8-tidy-imports
+    "TCH",   # flake8-type-checking
+    "ARG",   # flake8-unused-arguments
+    "PTH",   # flake8-use-pathlib
+    "ERA",   # eradicate
+    "TRY",   # tryceratops
+    "FLY",   # flynt
+    "PERF",  # perflint
+    "FURB",  # refurb
+    "RUF",   # Ruff-specific rules
+]
+ignore = [
+    "ANN1",   # missing-type-self, missing-type-cls - deprecated
+    "ANN401", # any-type
+    "A003",   # builtin-attribute-shadowing
+    "D1",     # undocumented-public-*
+    "D203",   # one-blank-line-before-class - incompatible with no-blank-line-before-class (D211)
+    "D213",   # multi-line-summary-second-line - incompatible with multi-line-summary-second-line (D213)
+    "ISC001", # single-line-implicit-string-concatenation - causes conflicts with ruff format
+    "S101",   # assert
+]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"src/glue/config.py" = ["FA100"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: nocover",
+    "if .*TYPE_CHECKING:",
+    "pass",
+    "@overload",
+]

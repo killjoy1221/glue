@@ -1,0 +1,38 @@
+###############################################################################
+# The default server defines how requests without a matching host should be
+# handled.
+###############################################################################
+# [default_server]
+# # configure the server to serve static files from a directory
+# root_path = "www"
+
+###############################################################################
+# Servers can be served on a VHost. Modern web browsers will understand any
+# host ending in ".localhost".
+# Downstream servers can be forwarded via a unix socket or a local address
+###############################################################################
+[servers."api.localhost"]
+uds = "{xdg_run}/api.sock"
+
+[servers."ui.localhost"]
+target = "http://localhost:5173"
+
+###############################################################################
+# The services table defines how the services should be launched.
+# All paths are relative to cwd
+###############################################################################
+[[services]]
+cwd = "api"
+# environment variables can be added using a file and loaded via python-dotenv
+env_file = ".env"
+
+# Run a python module
+python = ".venv/bin/python"
+module = "uvicorn"
+args = ["app:app", "--reload", "--uds", "{xdg_run}/api.sock"]
+
+# alternatively, a script path can be provided to run a non-python app
+[[services]]
+cwd = "ui"
+exec = "pnpm"
+args = ["run", "vite", "dev"]
