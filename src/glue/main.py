@@ -22,6 +22,7 @@ err = Console(stderr=True)
 @click.option("--host", type=str, default="127.0.0.1")
 @click.option("--port", type=int, default=8000)
 @click.option("--reload", type=bool, is_flag=True)
+@click.version_option()
 def main(config_path: Path, *, host: str, port: int, reload: bool) -> None:
     try:
         config = load_config(config_path)
