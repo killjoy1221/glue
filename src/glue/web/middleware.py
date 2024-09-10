@@ -9,7 +9,7 @@ import anyio.to_thread
 from starlette.routing import Host, Match, Mount
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from glue.apps.proxy_pass import ProxyPassApp
+from glue.web.apps import ProxyPassApp
 
 if TYPE_CHECKING:
     from starlette.applications import Starlette

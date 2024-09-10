@@ -1,6 +1,7 @@
 import abc
 from collections import OrderedDict
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 from typing import Optional, Union
 
@@ -10,24 +11,25 @@ from starlette.staticfiles import StaticFiles
 from starlette.types import ASGIApp
 from typing_extensions import override
 
-from .apps import ProxyPassApp
 from .compat import tomllib
 from .typecast import typecast
+from .utils import DirResolver, Dirs
+from .web import ProxyPassApp
 
 
 class BaseServerConfig(abc.ABC):
     @abc.abstractmethod
-    def create_route(self) -> ASGIApp:
+    def create_route(self, dirs: Dirs) -> ASGIApp:
         raise NotImplementedError
 
 
 class BaseProxyPassServer(BaseServerConfig):
     @override
-    def create_route(self) -> ASGIApp:
-        return ProxyPassApp(self.create_client)
+    def create_route(self, dirs: DirResolver) -> ASGIApp:
+        return ProxyPassApp(partial(self.create_client, dirs))
 
     @abc.abstractmethod
-    def create_client(self) -> httpx.AsyncClient:
+    def create_client(self, dirs: DirResolver) -> httpx.AsyncClient:
         raise NotImplementedError
 
 
@@ -36,10 +38,10 @@ class UnixDomainSocketServer(BaseProxyPassServer):
     uds: str
 
     @override
-    def create_client(self) -> httpx.AsyncClient:
+    def create_client(self, dirs: DirResolver) -> httpx.AsyncClient:
         return httpx.AsyncClient(
             base_url="http://localhost/",
-            transport=httpx.AsyncHTTPTransport(uds=self.uds.format(xdg_run="run")),
+            transport=httpx.AsyncHTTPTransport(uds=dirs.resolve_vars(self.uds)),
         )
 
 
@@ -48,8 +50,8 @@ class LocalAddressServer(BaseProxyPassServer):
     target: str
 
     @override
-    def create_client(self) -> httpx.AsyncClient:
-        return httpx.AsyncClient(base_url=self.target)
+    def create_client(self, dirs: DirResolver) -> httpx.AsyncClient:
+        return httpx.AsyncClient(base_url=dirs.resolve_vars(self.target))
 
 
 @dataclass(kw_only=True)
@@ -57,7 +59,7 @@ class StaticServer(BaseServerConfig):
     root_path: str
 
     @override
-    def create_route(self) -> ASGIApp:
+    def create_route(self, dirs: DirResolver) -> ASGIApp:
         return StaticFiles(directory=self.root_path, html=True)
 
 
@@ -66,6 +68,7 @@ ServerConfig = Union[UnixDomainSocketServer, LocalAddressServer, StaticServer]
 
 @dataclass(kw_only=True)
 class BaseServiceConfig:
+    name: str
     cwd: str = "."
     env: dict[str, Optional[str]] = field(default_factory=dict)
     env_file: Optional[str] = None
@@ -88,11 +91,17 @@ class PythonServiceConfig(BaseServiceConfig):
     module: str
     args: list[str] = field(default_factory=list)
 
+    def resolve_command(self) -> list[str]:
+        return [self.python, "-m", self.module, *self.args]
+
 
 @dataclass(kw_only=True)
 class ScriptServiceConfig(BaseServiceConfig):
     exec: str
     args: list[str] = field(default_factory=list)
+
+    def resolve_command(self) -> list[str]:
+        return [self.exec, *self.args]
 
 
 ServiceConfig = Union[PythonServiceConfig, ScriptServiceConfig]

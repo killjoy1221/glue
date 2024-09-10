@@ -4,6 +4,8 @@ __pycache__/
 build/
 dist/
 
+.pdm-python
+
 # Unit test / coverage reports
 htmlcov/
 .coverage
@@ -12,3 +14,5 @@ coverage.xml
 
 # Environments
 .venv
+
+.vscode

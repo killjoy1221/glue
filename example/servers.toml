@@ -12,7 +12,7 @@
 # Downstream servers can be forwarded via a unix socket or a local address
 ###############################################################################
 [servers."api.localhost"]
-uds = "{xdg_run}/api.sock"
+uds = "{api.xdg_run}/api.sock"
 
 [servers."ui.localhost"]
 target = "http://localhost:5173"
@@ -22,6 +22,7 @@ target = "http://localhost:5173"
 # All paths are relative to cwd
 ###############################################################################
 [[services]]
+name = "api"
 cwd = "api"
 # environment variables can be added using a file and loaded via python-dotenv
 env_file = ".env"
@@ -29,10 +30,11 @@ env_file = ".env"
 # Run a python module
 python = ".venv/bin/python"
 module = "uvicorn"
-args = ["app:app", "--reload", "--uds", "{xdg_run}/api.sock"]
+args = ["app:app", "--reload", "--uds", "{xdg_run}/api.sock", "--forwarded-allow-ips=*"]
 
 # alternatively, a script path can be provided to run a non-python app
 [[services]]
+name = "ui"
 cwd = "ui"
 exec = "pnpm"
-args = ["run", "vite", "dev"]
+args = ["run", "dev"]
