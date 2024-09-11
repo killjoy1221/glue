@@ -3,6 +3,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
+import sys
 from typing import Optional, Union
 
 import dotenv
@@ -112,6 +113,28 @@ class Config:
     default_server: Optional[ServerConfig] = None
     servers: dict[str, ServerConfig] = field(default_factory=dict)
     services: list[ServiceConfig] = field(default_factory=list)
+
+    def insert_root_service(
+        self, config_path: Path, *, host: str, port: int, reload: bool
+    ) -> None:
+        for svc in self.services:
+            if svc.name == ":root:":
+                return
+
+        root_service = PythonServiceConfig(
+            name=":root:",
+            python=sys.executable,
+            module="glue.web.main",
+            args=[
+                str(config_path),
+                "--host",
+                host,
+                "--port",
+                str(port),
+                *(["--reload"] if reload else []),
+            ],
+        )
+        self.services.insert(0, root_service)
 
 
 def load_config(path: Path) -> Config:

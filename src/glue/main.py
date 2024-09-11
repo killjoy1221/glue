@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 
 import click
@@ -9,7 +8,7 @@ from rich.console import Console
 from glue.pm import ServiceManager
 from glue.utils import Dirs
 
-from .config import PythonServiceConfig, load_config
+from .config import load_config
 from .typecast import TypeCastError
 from .ui import GlueApp
 
@@ -30,22 +29,8 @@ def main(config_path: Path, *, host: str, port: int, reload: bool) -> None:
         err.print(e)
         raise Exit(1) from None
 
-    config.services.insert(
-        0,
-        PythonServiceConfig(
-            name=":root:",
-            python=sys.executable,
-            module="glue.web.main",
-            args=[
-                str(config_path),
-                "--host",
-                host,
-                "--port",
-                str(port),
-                *(["--reload"] if reload else []),
-            ],
-        ),
-    )
+    if not config.servers and not config.default_server:
+        config.insert_root_service(config_path, host=host, port=port, reload=reload)
 
     dirs = Dirs.from_path(config_path)
 
