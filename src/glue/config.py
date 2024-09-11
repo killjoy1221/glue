@@ -1,9 +1,9 @@
 import abc
+import sys
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
-import sys
 from typing import Optional, Union
 
 import dotenv
