@@ -67,7 +67,6 @@ class ServiceInstance:
         self.process = subprocess.Popen(  # noqa: S603
             command,
             cwd=Path(self.config.cwd).resolve(),
-            preexec_fn=os.setsid,
             stdin=subprocess.DEVNULL,
             stdout=slave_fd,
             stderr=slave_fd,
