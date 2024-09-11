@@ -35,8 +35,7 @@ class ServiceInstance:
     def __init__(self, dirs: Dirs, config: ServiceConfig) -> None:
         self.dirs = dirs
         self.config = config
-        self.output = b""
-        self.process = None
+        self.process: subprocess.Popen[bytes] | None = None
 
     def shutdown(self) -> None:
         if self.process is not None:

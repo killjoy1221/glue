@@ -32,7 +32,7 @@ class RootAppCommands(BaseCommandProvider):
             self.app.push_screen(svc)
 
 
-class GlueApp(App):
+class GlueApp(App[object]):
     COMMANDS: ClassVar = App.COMMANDS | {RootAppCommands}
     BINDINGS: ClassVar = [
         *App.BINDINGS,

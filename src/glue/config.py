@@ -13,13 +13,13 @@ from typing_extensions import override
 
 from .compat import tomllib
 from .typecast import typecast
-from .utils import DirResolver, Dirs
+from .utils import DirResolver
 from .web import ProxyPassApp
 
 
 class BaseServerConfig(abc.ABC):
     @abc.abstractmethod
-    def create_route(self, dirs: Dirs) -> ASGIApp:
+    def create_route(self, dirs: DirResolver) -> ASGIApp:
         raise NotImplementedError
 
 

@@ -25,6 +25,9 @@ readme = "README.md"
 [project.scripts]
 glue = "glue.main:main"
 
+[tool.pdm.scripts]
+typecheck = "mypy src/glue"
+
 [tool.pdm.dev-dependencies]
 dev = [
     "mypy>=1.11.2",
@@ -108,3 +111,7 @@ exclude_lines = [
     "pass",
     "@overload",
 ]
+
+[tool.mypy]
+strict = true
+warn_return_any = false

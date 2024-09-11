@@ -21,7 +21,7 @@ class ProcessCommands(BaseCommandProvider):
         await self.screen.run_action("restart_service")
 
 
-class ProcessLogScreen(Screen):
+class ProcessLogScreen(Screen[object]):
     COMMANDS: ClassVar = {ProcessCommands}
     BINDINGS: ClassVar = [
         Binding("ctrl+r", "restart_service", "Restart", show=False),

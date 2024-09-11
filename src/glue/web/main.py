@@ -39,7 +39,7 @@ def get_editable_dirs() -> list[str]:
 
 
 def get_service_paths(config: Config) -> list[str]:
-    return [str(Path(c.cwd).absolute()) for c in config.services if c != "."]
+    return [str(Path(c.cwd).absolute()) for c in config.services if c.cwd != "."]
 
 
 @click.command()

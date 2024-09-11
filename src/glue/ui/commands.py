@@ -36,7 +36,7 @@ class Cmd:
 
     def __call__(self, f: TFunc) -> TFunc:
         self.callback = f
-        f.__command__ = self
+        f.__command__ = self  # type: ignore[union-attr]
         return f
 
 
