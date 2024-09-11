@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import base64
 import hashlib
+from dataclasses import dataclass, replace
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, Protocol
 
 import platformdirs
 from typing_extensions import Self
@@ -12,20 +13,28 @@ from typing_extensions import Self
 dirs = platformdirs.PlatformDirs("glue")
 
 
+class IPlatformDirs(Protocol):
+    @property
+    def user_runtime_path(self) -> Path: ...
+    @property
+    def user_state_path(self) -> Path: ...
+
+
+@dataclass
 class Dirs:
-    def __init__(self, subdir: Path | str) -> None:
-        self._subdir = subdir
+    subdir: Path | str
+    _dirs: IPlatformDirs = dirs
 
     def __truediv__(self, subdir: Path | str) -> Dirs:
-        return Dirs(Path(self._subdir) / subdir)
+        return replace(self, subdir=Path(self.subdir) / subdir)
 
     @property
     def runtime_dir(self) -> Path:
-        return dirs.user_runtime_path / self._subdir
+        return self._dirs.user_runtime_path / self.subdir
 
     @property
     def state_dir(self) -> Path:
-        return dirs.user_state_path / self._subdir
+        return self._dirs.user_state_path / self.subdir
 
     def build_namespace(self) -> dict[str, Path]:
         return {"xdg_run": self.runtime_dir, "xdg_state": self.state_dir}
