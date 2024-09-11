@@ -29,7 +29,7 @@ def main(config_path: Path, *, host: str, port: int, reload: bool) -> None:
         err.print(e)
         raise Exit(1) from None
 
-    if not config.servers and not config.default_server:
+    if config.servers or config.default_server:
         config.insert_root_service(config_path, host=host, port=port, reload=reload)
 
     dirs = Dirs.from_path(config_path)
