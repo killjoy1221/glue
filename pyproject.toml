@@ -29,8 +29,12 @@ glue = "glue.main:main"
 dev = [
     "mypy>=1.11.2",
     "fastapi>=0.112.2",
-    "textual-dev>=1.6.1"
+    "textual-dev>=1.6.1",
+    "pytest>=8.3.3",
 ]
+
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.9", "3.10", "3.11", "3.12"]
 
 [tool.ruff]
 target-version = "py39"
@@ -91,9 +95,15 @@ ignore = [
 [tool.ruff.lint.extend-per-file-ignores]
 "src/glue/config.py" = ["FA100"]
 
+[tool.coverage.run]
+branch = true
+parallel = true
+
 [tool.coverage.report]
+skip_covered = true
+show_missing = true
 exclude_lines = [
-    "pragma: nocover",
+    "pragma: no ?cover",
     "if .*TYPE_CHECKING:",
     "pass",
     "@overload",

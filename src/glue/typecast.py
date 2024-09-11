@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import MISSING, fields, is_dataclass
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar, Union
 
 from typing_extensions import TypeAlias, get_args, get_origin, overload
 
@@ -69,15 +69,14 @@ def _coerce_dataclass(typ: type[T_Data], val: Primitive, *, key: str) -> T_Data:
 @overload
 def _coerce_type(typ: type[T], val: Primitive, *, key: str) -> T: ...
 @overload
-def _coerce_type(typ: type[Any], val: Primitive, *, key: str) -> Any: ...
-def _coerce_type(typ: type[Any], val: Primitive, *, key: str) -> Any:
-    if typ is Any:
-        return val
+def _coerce_type(typ: Any, val: Primitive, *, key: str) -> Any: ...
+def _coerce_type(typ: Any, val: Primitive, *, key: str) -> Any:
+    assert isinstance(typ, type)
 
     if is_dataclass(typ):
         return _coerce_dataclass(typ, val, key=key)
 
-    if not isinstance(val, typ):
+    if (typ is NoneType and val is not None) or not isinstance(val, typ):
         msg = f"Value was {type(val).__name__}, but expected {typ.__name__}"
         raise TypeCastError(key, msg)
     return val
@@ -100,16 +99,15 @@ def _coerce_list(typ: type[list[T]], val: Primitive, *, key: str) -> list[T]:
 def _coerce_union(typ: type[T], val: Primitive, *, key: str) -> T:
     errors = []
     for ut in get_args(typ):
-        if ut is NoneType:
-            continue
         try:
             return typecast(ut, val, key=key)
-        except TypeCastError as e:
+        except TypeCastError as e:  # noqa: PERF203
             errors.append(f"- {e.message}")
     raise TypeCastError(key, "\nPossible issues:\n" + "\n".join(errors))
 
 
 _origin_mapper = {
+    None: _coerce_type,
     dict: _coerce_dict,
     list: _coerce_list,
     Union: _coerce_union,
@@ -117,19 +115,15 @@ _origin_mapper = {
 }
 
 
-class Coercable(Protocol):
-    def __call__(self, typ: Any, val: Primitive, *, key: str) -> Any: ...
-
-
 @overload
 def typecast(typ: type[T], val: Primitive, *, key: str = ...) -> T: ...
 @overload
 def typecast(typ: Any, val: Primitive, *, key: str = ...) -> Any: ...
 def typecast(typ: Any, val: Primitive, *, key: str = "") -> Any:
-    coerce: Coercable
-    if isinstance(typ, type):
-        coerce = _coerce_type
-    elif (origin := get_origin(typ)) in _origin_mapper:
+    if typ is Any:
+        return val
+
+    if (origin := get_origin(typ)) in _origin_mapper:
         coerce = _origin_mapper[origin]
     else:
         raise NotImplementedError(f"{typ} is not supported yet")
