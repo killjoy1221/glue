@@ -49,8 +49,6 @@ def get_service_paths(config: Config) -> list[str]:
 @click.option("--reload", type=bool, is_flag=True)
 def main(config_path: Path, *, host: str, port: int, reload: bool) -> None:
     """Start and manage development infrastructure."""
-    os.environ["GLUE_HOST"] = host
-    os.environ["GLUE_PORT"] = str(port)
     os.environ["GLUE_CONFIG_FILE"] = str(config_path.absolute())
 
     config = load_config(config_path)
@@ -66,6 +64,7 @@ def main(config_path: Path, *, host: str, port: int, reload: bool) -> None:
         reload_dirs=get_editable_dirs() if reload else None,
         reload_includes=[str(config_path)] if reload else None,
         reload_excludes=get_service_paths(config) if reload else None,
+        access_log=False,
     )
 
 
