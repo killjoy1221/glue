@@ -1,3 +1,3 @@
-from .apps import ProxyPassApp
+from .proxy import ProxyApp
 
-__all__ = ["ProxyPassApp"]
+__all__ = ["ProxyApp"]

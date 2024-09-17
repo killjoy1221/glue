@@ -2,14 +2,11 @@ import os
 from pathlib import Path
 
 from starlette.applications import Starlette
-from starlette.middleware import Middleware
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Host, Mount
 
 from glue.config import Config, load_config
 from glue.utils import DirResolver, Dirs
-
-from .middleware import MountedLifespanMiddleware
 
 
 def load_config_from_env() -> tuple[Config, DirResolver]:
@@ -49,6 +46,5 @@ def create_app() -> Starlette:
         routes.append(Mount("", resp))
 
     return Starlette(
-        middleware=[Middleware(MountedLifespanMiddleware)],
         routes=routes,
     )

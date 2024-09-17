@@ -2,12 +2,10 @@ import abc
 import sys
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from functools import partial
 from pathlib import Path
 from typing import Optional, Union
 
 import dotenv
-import httpx
 from starlette.staticfiles import StaticFiles
 from starlette.types import ASGIApp
 from typing_extensions import override
@@ -15,7 +13,8 @@ from typing_extensions import override
 from .compat import tomllib
 from .typecast import typecast
 from .utils import DirResolver
-from .web import ProxyPassApp
+from .web import ProxyApp
+from .web.clients import ClientsFactory, UnixClientFactory, URLClientFactory
 
 
 class BaseServerConfig(abc.ABC):
@@ -27,10 +26,10 @@ class BaseServerConfig(abc.ABC):
 class BaseProxyPassServer(BaseServerConfig):
     @override
     def create_route(self, dirs: DirResolver) -> ASGIApp:
-        return ProxyPassApp(partial(self.create_client, dirs))
+        return ProxyApp(self.create_client_factory(dirs))
 
     @abc.abstractmethod
-    def create_client(self, dirs: DirResolver) -> httpx.AsyncClient:
+    def create_client_factory(self, dirs: DirResolver) -> ClientsFactory:
         raise NotImplementedError
 
 
@@ -39,11 +38,8 @@ class UnixDomainSocketServer(BaseProxyPassServer):
     uds: str
 
     @override
-    def create_client(self, dirs: DirResolver) -> httpx.AsyncClient:
-        return httpx.AsyncClient(
-            base_url="http://localhost/",
-            transport=httpx.AsyncHTTPTransport(uds=dirs.resolve_vars(self.uds)),
-        )
+    def create_client_factory(self, dirs: DirResolver) -> ClientsFactory:
+        return UnixClientFactory(self.uds, dirs)
 
 
 @dataclass(kw_only=True)
@@ -51,8 +47,8 @@ class LocalAddressServer(BaseProxyPassServer):
     target: str
 
     @override
-    def create_client(self, dirs: DirResolver) -> httpx.AsyncClient:
-        return httpx.AsyncClient(base_url=dirs.resolve_vars(self.target))
+    def create_client_factory(self, dirs: DirResolver) -> ClientsFactory:
+        return URLClientFactory(self.target, dirs)
 
 
 @dataclass(kw_only=True)

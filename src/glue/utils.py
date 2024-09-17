@@ -20,6 +20,11 @@ class IPlatformDirs(Protocol):
     def user_state_path(self) -> Path: ...
 
 
+class VarResolver(Protocol):
+    def resolve_vars(self, arg: str) -> str: ...
+    def resolve_vars_list(self, args: list[str]) -> list[str]: ...
+
+
 @dataclass
 class Dirs:
     subdir: Path | str
