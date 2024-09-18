@@ -32,6 +32,7 @@ class _UnixProcess:
             self.process.kill()
             self.process.wait()
 
+
 def spawn(
     argv: list[str],
     *,

@@ -13,7 +13,6 @@ from starlette.websockets import WebSocket, WebSocketDisconnect
 from websockets import ConnectionClosed, InvalidState
 
 if TYPE_CHECKING:
-
     from starlette.types import Receive, Scope, Send
     from websockets.asyncio.connection import Connection
 
