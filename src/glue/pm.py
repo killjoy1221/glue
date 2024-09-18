@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-import os
-import pty
-import signal
-import subprocess
 import threading
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from rich.control import Control
+
+from .pty import Process, spawn
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -35,16 +33,11 @@ class ServiceInstance:
     def __init__(self, dirs: Dirs, config: ServiceConfig) -> None:
         self.dirs = dirs
         self.config = config
-        self.process: subprocess.Popen[bytes] | None = None
+        self.process: Process | None = None
 
     def shutdown(self) -> None:
         if self.process is not None:
-            self.process.send_signal(signal.SIGINT)
-            try:
-                self.process.wait(5)
-            except subprocess.TimeoutExpired:
-                self.process.kill()
-                self.process.wait()
+            self.process.stop()
             self.process = None
 
     def restart(self, write: Callable[[RenderableType], Any]) -> None:
@@ -63,21 +56,18 @@ class ServiceInstance:
 
         write(f"$ cd {self.config.cwd} && {' '.join(command)}\n")
 
-        master_fd, slave_fd = pty.openpty()
-        self.process = subprocess.Popen(  # noqa: S603
+        self.process = process = spawn(
             command,
             cwd=Path(self.config.cwd).resolve(),
-            stdin=subprocess.DEVNULL,
-            stdout=slave_fd,
-            stderr=slave_fd,
         )
 
         def target() -> None:
-            assert self.process is not None
-            while self.process.poll() is None:
-                if data := os.read(master_fd, 1024):
+            data = b""
+            while process.is_running():
+                if data := process.read(1024):
                     write(data.decode())
-            write("%")
+            if not data.endswith(b"\n"):
+                write("%")
 
         t = threading.Thread(target=target, daemon=True)
         t.start()
